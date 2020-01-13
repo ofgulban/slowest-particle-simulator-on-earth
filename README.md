@@ -1,2 +1,3 @@
-# slowest-particle-simulator-on-earth
-Material point method particle simulations implemented in python
+# Slowest particle simulator on earth
+
+Work in progress... (for OpenMR Benelux Hackathon project)
