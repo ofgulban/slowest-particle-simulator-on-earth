@@ -99,7 +99,8 @@ def grid_velocity_update(c_velo, c_mass, dt=1., gravity=0.05):
     return c_velo
 
 
-def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.):
+def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.,
+                              rule="bounce", bounce_factor=0.5):
     """Update particles based on velocities on the grid."""
     dims = c_velo.shape
     nr_part = p_pos.shape[0]
@@ -138,7 +139,8 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.):
         p += v * dt
 
         # Act on escaped particles
-        p, v = clamp(p, v, d_min=0, d_max=dims[1], rule="bounce")
+        p, v = clamp(p, v, d_min=0, d_max=dims[1], rule="bounce",
+                     bounce_factor=bounce_factor)
 
         # Update particles
         p_pos[i] = p[:]
@@ -147,7 +149,7 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.):
     return p_pos, p_velo
 
 
-def clamp(p, v, d_min=0, d_max=100, rule="slip"):
+def clamp(p, v, d_min=0, d_max=100, rule="slip", bounce_factor=-0.5):
     """Prevent particles escaping grid."""
 
     if rule == "slip":  # Clamp positions
@@ -163,15 +165,15 @@ def clamp(p, v, d_min=0, d_max=100, rule="slip"):
     elif rule == "bounce":
         if p[0] < d_min + 1:
             p[0] = d_min + 1
-            v[0] /= -1.25
+            v[0] /= bounce_factor
         elif p[0] > d_max - 2:
             p[0] = d_max - 2
-            v[0] /= -1.25
+            v[0] /= bounce_factor
         if p[1] < d_min + 1:
             p[1] = d_min + 1
-            v[1] /= -1.25
+            v[1] /= bounce_factor
         elif p[1] > d_max - 2:
             p[1] = d_max - 2
-            v[1] /= -1.25
+            v[1] /= bounce_factor
 
     return p, v
