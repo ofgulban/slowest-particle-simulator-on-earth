@@ -10,15 +10,15 @@ from slowest_particle_simulator_on_earth.utils import save_img
 # =============================================================================
 # Parameters
 NII_FILE = "/home/faruk/gdrive/test_brainsplode2/T1w.nii.gz"
-OUT_DIR = "/home/faruk/Git/slowest-particle-simulator-on-earth/examples/test_02"
+OUT_DIR = "/home/faruk/Git/slowest-particle-simulator-on-earth/examples/test_04"
 MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
 
 DIMS = (256, 256)
 NR_ITER = 200
 DT = 1  # Time step (smaller = more accurate simulation)
-GRAVITY = 0.05
+GRAVITY = 0.00
 
-THR_MIN = 200
+THR_MIN = 400
 THR_MAX = 500
 
 OFFSET_X = 0
@@ -68,8 +68,8 @@ p_pos[:, 1] += 0.5
 NR_PART = p_pos.shape[0]
 
 p_velo = np.zeros((NR_PART, 2))
-p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -1
-p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
+p_velo[:, 0] = (np.random.rand(NR_PART) - 0.5) * 10
+p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 10
 # p_velo[:, 0] = -1
 
 p_mass = np.ones(NR_PART)
@@ -91,14 +91,14 @@ for t in range(NR_ITER):
         c_velo, c_mass, dt=DT, gravity=GRAVITY)
 
     # Manipulate grid velocities
-    c_velo[idx_mask_x, idx_mask_y, :] *= -1.25
-    c_velo += (np.random.rand(c_velo.shape[0], c_velo.shape[1], 2) - 0.5) / 10
+    if t % 20 == 0:
+        c_velo[..., :, 0] *= -1
+    elif t % 20 == 10:
+        c_velo[..., 0, :] *= -1
 
     p_pos, p_velo = grid_to_particle_velocity(
-        p_pos, p_velo, p_weights, c_velo, dt=DT)
-
-    # Add static
-    c_values[idx_mask_x, idx_mask_y] += data[idx_mask_x, idx_mask_y]
+        p_pos, p_velo, p_weights, c_velo, dt=DT,
+        rule="bounce", bounce_factor=-0.9)
 
     # Adjust brightness w.r.t. mass
     c_values[c_mass > 2] /= c_mass[c_mass > 2]
