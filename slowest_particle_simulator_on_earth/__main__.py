@@ -20,19 +20,25 @@ def main():
         help="Path to nifti file. Use a masked image for faster iterations."
         )
     parser.add_argument(
-        '--iterations', type=str, required=False,
+        '--iterations', type=int, required=False,
         metavar=cfg.iterations, default=cfg.iterations,
         help="Number of iterations. Equal to number of frames generated."
         )
     parser.add_argument(
-        '--explosiveness', type=str, required=False,
+        '--explosiveness', type=float, required=False,
         metavar=cfg.explosiveness, default=cfg.explosiveness,
         help="Larger numbers for larger explosions."
+        )
+    parser.add_argument(
+        '--slice_number', type=int, required=False,
+        metavar=cfg.explosiveness, default=cfg.explosiveness,
+        help="Slice on Z axis that will be visualized."
         )
 
     args = parser.parse_args()
     cfg.iterations = args.iterations
     cfg.explosiveness = args.explosiveness
+    cfg.slice_number = args.slice_number
 
     # Welcome message
     welcome_str = '{} {}'.format(
