@@ -2,7 +2,7 @@
 
 import argparse
 import slowest_particle_simulator_on_earth.config as cfg
-from slowest_particle_simulator_on_earth.config import core, __version__
+from slowest_particle_simulator_on_earth import core, __version__
 
 
 def main():
