@@ -31,7 +31,7 @@ TODO: Add instructions for converting the frames into a gif.
 
 ## Support
 
-Please use [GitHub issues](https://github.com/ofgulban/compoda/issues) for questions, bug reports or feature requests.
+Please use [GitHub issues](https://github.com/ofgulban/slowest-particle-simulator-on-earth/issues) for questions, bug reports or feature requests.
 
 ## License
 
