@@ -22,6 +22,13 @@ Just a fun project to learn particle simulations. Developed for applying particl
 
 TODO: Push version 0.1.0 to pip and update here.
 
+## Usage
+```
+slowest_particle_simulator_on_earth /path/to/image.nii.gz --slice_number 165
+```
+
+TODO: Add instructions for converting the frames into a gif.
+
 ## Support
 
 Please use [GitHub issues](https://github.com/ofgulban/compoda/issues) for questions, bug reports or feature requests.
