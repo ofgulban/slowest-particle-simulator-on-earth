@@ -7,7 +7,6 @@ Work in progress... (for OpenMR Benelux Hackathon project)
 
 Just a fun project to learn particle simulations. Developed for applying particle physics to magnetic resonance images (nifti file format).
 
----
 
 ## Dependencies
 
