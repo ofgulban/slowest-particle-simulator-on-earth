@@ -49,7 +49,8 @@ def main():
     # =========================================================================
     # Parameters
     NII_FILE = args.filename
-    OUT_DIR = args.outdir
+
+    # TODO: determine output directory and mkdir export folder
 
     DIMS = (256, 256)
     NR_ITER = 200
