@@ -2,6 +2,8 @@
 
 Work in progress... (for OpenMR Benelux Hackathon project)
 
+Just a fun project to learn particle simulations. Developed for applying particle physics to magnetic resonance images (nifti file format).
+
 ## Dependencies
 
 **[Python 3](https://www.python.org/)**
@@ -14,7 +16,7 @@ Work in progress... (for OpenMR Benelux Hackathon project)
 
 ## Installation
 
-wip...
+TODO: Push version 0.1.0 to pip and update here.
 
 ## Support
 
