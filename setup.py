@@ -1,7 +1,16 @@
 """Slowest particle simulator on earth setup.
 
+Notes for development installation
+==================================
 To install for development, using the commandline do:
     pip install -e /path/to/slowest_particle_simulator_on_earth
+
+Notes for PyPI:
+===============
+1. cd to repository folder
+2. ```python setup.py sdist upload -r pypitest```
+3. Check everything looks fine on the test server.
+4. ```python setup.py sdist upload -r pypi```
 """
 
 from setuptools import setup
