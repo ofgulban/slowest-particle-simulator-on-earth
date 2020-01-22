@@ -2,4 +2,4 @@
 
 explosiveness = 1
 iterations = 100
-slice_number = 50
+slice_number = 165

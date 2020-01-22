@@ -16,6 +16,6 @@ def save_img(img, out_dir, suffix="", invert=False):
         img_out *= -1
         img_out += 1
 
-    out_name = "test_{}.png".format(suffix)
+    out_name = "frame_{}.png".format(suffix)
     out_path = join(out_dir, out_name)
     plt.imsave(out_path, img_out, origin="upper")

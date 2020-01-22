@@ -1,5 +1,7 @@
 """Main entry point."""
 
+import os
+import pathlib
 import argparse
 import nibabel as nb
 import numpy as np
@@ -16,8 +18,9 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument(
-        'filename',  metavar='path', nargs='+',
-        help="Path to nifti file. Use a masked image for faster iterations."
+        'filename',  metavar='path',
+        help="Path to nifti file. Only positive values will be visualized \
+        Use a masked image for faster iterations."
         )
     parser.add_argument(
         '--iterations', type=int, required=False,
@@ -32,7 +35,7 @@ def main():
     parser.add_argument(
         '--slice_number', type=int, required=False,
         metavar=cfg.explosiveness, default=cfg.explosiveness,
-        help="Slice on Z axis that will be visualized."
+        help="Slice on Y axis that will be visualized."
         )
 
     args = parser.parse_args()
@@ -49,36 +52,37 @@ def main():
     # =========================================================================
     # Parameters
     NII_FILE = args.filename
+    NR_ITER = cfg.iterations
+    SLICE_NR = cfg.slice_number
+    OUT_DIR = os.path.join(os.path.dirname(NII_FILE), "export")
+    pathlib.Path(OUT_DIR).mkdir(parents=True, exist_ok=True)
 
-    # TODO: determine output directory and mkdir export folder
-
-    DIMS = (256, 256)
-    NR_ITER = 200
-    DT = 1  # Time step (smaller = more accurate simulation)
-    GRAVITY = 0.05
-
-    THR_MIN = 300
-    THR_MAX = 500
-
-    OFFSET_X = 0
-    OFFSET_Y = 32
     # -------------------------------------------------------------------------
     # Load nifti
     nii = nb.load(NII_FILE)
-    data = nii.get_fdata()[:, 165, :]
-    dims_data = data.shape
+    data = nii.get_fdata()[:, SLICE_NR, :]
+    dims_data = np.array(data.shape)
+    DIMS = (dims_data.max(), dims_data.max())
+
+    # -------------------------------------------------------------------------
+    # Parameters that can be added to CLI in the future
+    DT = 1  # Time step (smaller = more accurate simulation)
+    GRAVITY = 0.05
+
+    OFFSET_X = int((dims_data.max() - dims_data[0]) / 2.)
+    OFFSET_Y = int((dims_data.max() - dims_data[1]) / 2.)
+
+    # -------------------------------------------------------------------------
 
     # Embed data into square lattice
     temp = np.zeros(DIMS)
-    temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = data
+    temp[OFFSET_X:OFFSET_X+dims_data[0], OFFSET_Y:OFFSET_Y+dims_data[1]] = data
     data = np.copy(temp)
 
     # Normalize to 0-1 range
-    data -= THR_MIN
     data[data < 0] = 0
-    data[data > (THR_MAX - THR_MIN)] = THR_MAX - THR_MIN
-    data = data / (THR_MAX - THR_MIN)
-    data *= 0.5
+    data[data > 0] -= data[data > 0].min()
+    data[data > 0] /= data[data > 0].max()
 
     # -------------------------------------------------------------------------
     # Initialize particles
@@ -129,6 +133,7 @@ def main():
         print("Iteration: {}".format(t))
 
     # =========================================================================
+
 
 if __name__ == "__main__":
     main()
