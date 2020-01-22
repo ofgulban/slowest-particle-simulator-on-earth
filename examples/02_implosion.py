@@ -10,7 +10,7 @@ from slowest_particle_simulator_on_earth.utils import save_img
 # =============================================================================
 # Parameters
 NII_FILE = "/home/faruk/gdrive/test_brainsplode2/T1w.nii.gz"
-OUT_DIR = "/home/faruk/Git/slowest-particle-simulator-on-earth/examples/test_01"
+OUT_DIR = "/home/faruk/Git/slowest-particle-simulator-on-earth/examples/test_02"
 MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
 
 DIMS = (256, 256)
@@ -37,13 +37,12 @@ data = np.copy(temp)
 # Load Mask
 mask = nb.load(MASK)
 mask = mask.get_fdata()[:, 165, :]
-mask = (mask+1) % 2
 
 # Embed mask into square lattice
 temp = np.zeros(DIMS)
 temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = mask
 mask = np.copy(temp)
-idx_mask_x, idx_mask_y = np.where(mask)
+idx_mask_x, idx_mask_y = np.where((mask+1) % 2)
 
 # Normalize to 0-1 range
 data -= THR_MIN
@@ -54,7 +53,7 @@ data *= 0.5
 
 # =============================================================================
 # Initialize particles
-x, y = np.where(data * ((mask+1) % 2))
+x, y = np.where(data * mask)
 p_pos = np.stack((x, y), axis=1)
 p_pos = p_pos.astype(float)
 
