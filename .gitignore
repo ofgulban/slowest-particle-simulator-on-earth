@@ -128,5 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Ignore exports folders
-*test*
+# Ignore export/output folders
+*export*

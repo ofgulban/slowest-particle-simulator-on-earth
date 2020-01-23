@@ -10,11 +10,11 @@ from slowest_particle_simulator_on_earth.utils import (
 
 # =============================================================================
 # Parameters
-NII_FILE = "/home/faruk/gdrive/test_brainsplode2/T1w.nii.gz"
+NII_FILE = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped.nii.gz"
 OUT_DIR = create_export_folder(NII_FILE)
-MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
+MASK = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped_brain.nii.gz"
 
-SLICE_NR = 165
+SLICE_NR = 3
 
 DIMS = (256, 256)
 NR_ITER = 200
@@ -73,7 +73,6 @@ NR_PART = p_pos.shape[0]
 p_velo = np.zeros((NR_PART, 2))
 p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -1
 p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
-# p_velo[:, 0] = -1
 
 p_mass = np.ones(NR_PART)
 
