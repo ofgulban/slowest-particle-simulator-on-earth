@@ -13,10 +13,16 @@ Notes for PyPI:
 4. ```python setup.py sdist upload -r pypi```
 """
 
+import os
 from setuptools import setup
 
+# read the contents of README.md
+this_directory = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    LONG_DESCRIPTION = f.read()
+
 setup(name='slowest_particle_simulator_on_earth',
-      version='0.0.0',
+      version='0.0.1',
       description=('A very slow particle simulator for exploding nifti files.'),
       url='https://github.com/ofgulban/slowest-particle-simulator-on-earth',
       author='Omer Faruk Gulban',
