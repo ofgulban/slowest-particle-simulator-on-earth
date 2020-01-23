@@ -1,6 +1,6 @@
 # Slowest particle simulator on earth
 
-<img src="/visuals/animation_01_opt.gif" width=150 align="right" />
+<img src="/visuals/animation_01_opt.gif" width=250 align="right" />
 
 
 Work in progress... (for OpenMR Benelux Hackathon project)
