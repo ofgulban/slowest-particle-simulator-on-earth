@@ -94,7 +94,11 @@ def main():
     p_C = np.zeros((NR_PART, 2, 2))
 
     # Initialize cells
-    cells = np.zeros(DIMS)
+    cells = np.zeros(data.shape)
+
+    # Some informative prints
+    print("Output folder:\n  {}".format(OUT_DIR))
+    print("Number of particles: {}".format(NR_PART))
 
     # -------------------------------------------------------------------------
     # Start simulation iterations

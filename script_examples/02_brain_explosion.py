@@ -38,11 +38,11 @@ data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 mask = nb.load(MASK)
 mask = mask.get_fdata()[:, SLICE_NR, :]
 mask = embed_data_into_square_lattice(mask)
-idx_mask_x, idx_mask_y = np.where((mask+1) % 2)
+idx_mask_x, idx_mask_y = np.where(mask == 0)
 
 # =============================================================================
 # Initialize particles
-x, y = np.where(data * mask)
+x, y = np.where(data * (mask != 0))
 p_pos = np.stack((x, y), axis=1)
 p_pos = p_pos.astype(float)
 
@@ -66,6 +66,10 @@ p_C = np.zeros((NR_PART, 2, 2))
 
 # Initialize cells
 cells = np.zeros(data.shape)
+
+# Some informative prints
+print("Output folder: {}".format(OUT_DIR))
+print("Number of particles: {}".format(NR_PART))
 
 # =============================================================================
 # Start simulation iterations

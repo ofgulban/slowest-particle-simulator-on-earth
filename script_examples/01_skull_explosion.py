@@ -56,10 +56,9 @@ p_pos[:, 0] += 0.5
 p_pos[:, 1] += 0.5
 
 NR_PART = p_pos.shape[0]
-print("Number of particles: {}".format(NR_PART))
 
 p_velo = np.zeros((NR_PART, 2))
-p_velo[:, 0] = (np.random.rand(NR_PART) + 1.5) * -1
+p_velo[:, 0] = (np.random.rand(NR_PART) + 0.75) * -1
 p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
 
 p_mass = np.ones(NR_PART)
@@ -68,6 +67,10 @@ p_C = np.zeros((NR_PART, 2, 2))
 
 # Initialize cells
 cells = np.zeros(data.shape)
+
+# Some informative prints
+print("Output folder: {}".format(OUT_DIR))
+print("Number of particles: {}".format(NR_PART))
 
 # =============================================================================
 # Start simulation iterations
