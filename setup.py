@@ -23,9 +23,9 @@ with open(os.path.join(this_directory, 'README.md'), encoding='utf-8') as f:
 
 setup(name='slowest_particle_simulator_on_earth',
       version='0.0.2',
+      description=('A very slow particle simulator for exploding nifti files.'),
       long_description=LONG_DESCRIPTION,
       long_description_content_type='text/markdown',
-      description=('A very slow particle simulator for exploding nifti files.'),
       url='https://github.com/ofgulban/slowest-particle-simulator-on-earth',
       author='Omer Faruk Gulban',
       author_email="farukgulban@gmail.com",
