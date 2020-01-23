@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # Ignore export/output folders
-./script_examples/sample_data/export*
+./script_examples/sample_data/export*/
