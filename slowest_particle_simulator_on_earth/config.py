@@ -3,3 +3,5 @@
 explosiveness = 1
 iterations = 200
 slice_number = 165
+
+gravity = 0.05

@@ -6,19 +6,19 @@ from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
 from slowest_particle_simulator_on_earth.utils import (
-    save_img, create_export_folder)
+    save_img, create_export_folder, embed_data_into_square_lattice,
+    normalize_data_range)
 
 # =============================================================================
 # Parameters
-NII_FILE = "/home/faruk/gdrive/test_brainsplode2/T1w.nii.gz"
+NII_FILE = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped.nii.gz"
 OUT_DIR = create_export_folder(NII_FILE)
-MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
+MASK = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped_brain.nii.gz"
 
 SLICE_NR = 3
+NR_ITER = 200
 
-DIMS = (256, 256)
-NR_ITER = 800
-DT = 0.25  # Time step (smaller = more accurate simulation)
+DT = 1  # Time step (smaller = more accurate simulation)
 GRAVITY = 0.05
 
 THR_MIN = 200
@@ -26,33 +26,19 @@ THR_MAX = 500
 
 OFFSET_X = 0
 OFFSET_Y = 32
+
 # =============================================================================
 # Load nifti
 nii = nb.load(NII_FILE)
 data = nii.get_fdata()[:, SLICE_NR, :]
-dims_data = data.shape
-
-# Embed data into square lattice
-temp = np.zeros(DIMS)
-temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = data
-data = np.copy(temp)
+data = embed_data_into_square_lattice(data)
+data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 
 # Load Mask
 mask = nb.load(MASK)
 mask = mask.get_fdata()[:, SLICE_NR, :]
-
-# Embed mask into square lattice
-temp = np.zeros(DIMS)
-temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = mask
-mask = np.copy(temp)
+mask = embed_data_into_square_lattice(mask)
 idx_mask_x, idx_mask_y = np.where((mask+1) % 2)
-
-# Normalize to 0-1 range
-data -= THR_MIN
-data[data < 0] = 0
-data[data > (THR_MAX - THR_MIN)] = THR_MAX - THR_MIN
-data = data / (THR_MAX - THR_MIN)
-data *= 0.5
 
 # =============================================================================
 # Initialize particles
@@ -71,16 +57,15 @@ p_pos[:, 1] += 0.5
 NR_PART = p_pos.shape[0]
 
 p_velo = np.zeros((NR_PART, 2))
-p_velo[:, 0] = (np.random.rand(NR_PART) - 1) * 10
-p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 10
-# p_velo[:, 0] = -1
+p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -1
+p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
 
 p_mass = np.ones(NR_PART)
 
 p_C = np.zeros((NR_PART, 2, 2))
 
 # Initialize cells
-cells = np.zeros(DIMS)
+cells = np.zeros(data.shape)
 
 # =============================================================================
 # Start simulation iterations

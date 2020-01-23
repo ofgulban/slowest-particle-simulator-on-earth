@@ -16,7 +16,6 @@ MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
 
 SLICE_NR = 3
 
-DIMS = (256, 256)
 NR_ITER = 800
 DT = 0.25  # Time step (smaller = more accurate simulation)
 GRAVITY = 0.05
@@ -30,7 +29,8 @@ OFFSET_Y = 32
 # Load nifti
 nii = nb.load(NII_FILE)
 data = nii.get_fdata()[:, SLICE_NR, :]
-dims_data = data.shape
+dims_data = np.array(data.shape)
+DIMS = (dims_data.max(), dims_data.max())
 
 # Embed data into square lattice
 temp = np.zeros(DIMS)

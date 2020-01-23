@@ -9,7 +9,8 @@ from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
 from slowest_particle_simulator_on_earth.utils import (
-    save_img, create_export_folder)
+    save_img, create_export_folder, embed_data_into_square_lattice,
+    normalize_data_range)
 
 
 def main():
@@ -56,32 +57,17 @@ def main():
 
     OUT_DIR = create_export_folder(NII_FILE)
 
-    # -------------------------------------------------------------------------
-    # Load nifti
-    nii = nb.load(NII_FILE)
-    data = nii.get_fdata()[:, SLICE_NR, :]
-    dims_data = np.array(data.shape)
-    DIMS = (dims_data.max(), dims_data.max())
-
-    # -------------------------------------------------------------------------
     # Parameters that can be added to CLI in the future
     DT = 1  # Time step (smaller = more accurate simulation)
     GRAVITY = 0.05
 
-    OFFSET_X = int((dims_data.max() - dims_data[0]) / 2.)
-    OFFSET_Y = int((dims_data.max() - dims_data[1]) / 2.)
-
     # -------------------------------------------------------------------------
-
-    # Embed data into square lattice
-    temp = np.zeros(DIMS)
-    temp[OFFSET_X:OFFSET_X+dims_data[0], OFFSET_Y:OFFSET_Y+dims_data[1]] = data
-    data = np.copy(temp)
-
-    # Normalize to 0-1 range
-    data[data < 0] = 0
-    data[data > 0] -= data[data > 0].min()
-    data[data > 0] /= data[data > 0].max()
+    # Load nifti
+    nii = nb.load(NII_FILE)
+    data = nii.get_fdata()[:, SLICE_NR, :]
+    data = embed_data_into_square_lattice(data)
+    data = normalize_data_range(data, thr_min=data[data > 0].min(),
+                                thr_max=data[data > 0].max())
 
     # -------------------------------------------------------------------------
     # Initialize particles

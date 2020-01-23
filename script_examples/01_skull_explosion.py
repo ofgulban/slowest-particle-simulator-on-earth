@@ -6,7 +6,8 @@ from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
 from slowest_particle_simulator_on_earth.utils import (
-    save_img, create_export_folder)
+    save_img, create_export_folder, embed_data_into_square_lattice,
+    normalize_data_range)
 
 # =============================================================================
 # Parameters
@@ -26,33 +27,19 @@ THR_MAX = 500
 
 OFFSET_X = 0
 OFFSET_Y = 32
+
 # =============================================================================
 # Load nifti
 nii = nb.load(NII_FILE)
 data = nii.get_fdata()[:, SLICE_NR, :]
-dims_data = data.shape
-
-# Embed data into square lattice
-temp = np.zeros(DIMS)
-temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = data
-data = np.copy(temp)
+data = embed_data_into_square_lattice(data)
+data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 
 # Load Mask
 mask = nb.load(MASK)
 mask = mask.get_fdata()[:, SLICE_NR, :]
-
-# Embed mask into square lattice
-temp = np.zeros(DIMS)
-temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = mask
-mask = np.copy(temp)
-idx_mask_x, idx_mask_y = np.where(mask)
-
-# Normalize to 0-1 range
-data -= THR_MIN
-data[data < 0] = 0
-data[data > (THR_MAX - THR_MIN)] = THR_MAX - THR_MIN
-data = data / (THR_MAX - THR_MIN)
-data *= 0.5
+mask = embed_data_into_square_lattice(mask)
+idx_mask_x, idx_mask_y = np.where((mask+1) % 2)
 
 # =============================================================================
 # Initialize particles
@@ -79,7 +66,7 @@ p_mass = np.ones(NR_PART)
 p_C = np.zeros((NR_PART, 2, 2))
 
 # Initialize cells
-cells = np.zeros(DIMS)
+cells = np.zeros(data.shape)
 
 # =============================================================================
 # Start simulation iterations
