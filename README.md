@@ -41,4 +41,4 @@ Please use [GitHub issues](https://github.com/ofgulban/slowest-particle-simulato
 
 ## License
 
-The project is licensed under [BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause).
+This project is licensed under [BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause).
