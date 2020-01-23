@@ -23,11 +23,11 @@ Just a fun project to learn particle simulations. Developed for applying particl
 TODO: Push version 0.1.0 to pip and update here.
 
 ## Usage
+Type the following command on your command line:
 ```
 slowest_particle_simulator_on_earth /path/to/image.nii.gz --slice_number 165
 ```
-
-TODO: Add instructions for converting the frames into a gif.
+*Note:* You can select different slice numbers. For now the slices can only be chosen on one axis. I am going to make this more flexible later.
 
 ## Making a gif
 
