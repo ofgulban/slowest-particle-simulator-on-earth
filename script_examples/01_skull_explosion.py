@@ -39,11 +39,11 @@ data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 mask = nb.load(MASK)
 mask = mask.get_fdata()[:, SLICE_NR, :]
 mask = embed_data_into_square_lattice(mask)
-idx_mask_x, idx_mask_y = np.where((mask+1) % 2)
+idx_mask_x, idx_mask_y = np.where(mask != 0)
 
 # =============================================================================
 # Initialize particles
-x, y = np.where(data * ((mask+1) % 2))
+x, y = np.where(data * (mask == 0))
 p_pos = np.stack((x, y), axis=1)
 p_pos = p_pos.astype(float)
 
@@ -56,9 +56,10 @@ p_pos[:, 0] += 0.5
 p_pos[:, 1] += 0.5
 
 NR_PART = p_pos.shape[0]
+print("Number of particles: {}".format(NR_PART))
 
 p_velo = np.zeros((NR_PART, 2))
-p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -1
+p_velo[:, 0] = (np.random.rand(NR_PART) + 1.5) * -1
 p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
 
 p_mass = np.ones(NR_PART)
