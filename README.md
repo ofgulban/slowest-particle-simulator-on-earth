@@ -1,11 +1,8 @@
-# Slowest particle simulator on earth
-
 <img src="/visuals/animation_01_opt.gif" width=250 align="right" />
 
+# Slowest particle simulator on earth
 
-Work in progress... (for OpenMR Benelux Hackathon project)
-
-Just a fun project to learn particle simulations. Developed for applying particle physics to magnetic resonance images (nifti file format).
+Just a fun project to learn about particle simulations. Developed for applying particle physics to magnetic resonance images (nifti file format).
 
 
 ## Dependencies
