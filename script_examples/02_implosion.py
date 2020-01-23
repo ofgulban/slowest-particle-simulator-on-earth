@@ -1,16 +1,17 @@
-"""Example 1."""
+"""Script example 2: brain explodes skull stays still."""
 
 import nibabel as nb
 import numpy as np
 from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
-from slowest_particle_simulator_on_earth.utils import save_img
+from slowest_particle_simulator_on_earth.utils import (
+    save_img, create_export_folder)
 
 # =============================================================================
 # Parameters
 NII_FILE = "/home/faruk/gdrive/test_brainsplode2/T1w.nii.gz"
-OUT_DIR = "/home/faruk/Git/slowest-particle-simulator-on-earth/examples/test_03"
+OUT_DIR = create_export_folder(NII_FILE)
 MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
 
 DIMS = (256, 256)

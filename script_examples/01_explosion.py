@@ -1,17 +1,20 @@
-"""Example 1."""
+"""Script example 1: skull explodes but brain stays still."""
 
 import nibabel as nb
 import numpy as np
 from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
-from slowest_particle_simulator_on_earth.utils import save_img
+from slowest_particle_simulator_on_earth.utils import (
+    save_img, create_export_folder)
 
 # =============================================================================
 # Parameters
 NII_FILE = "/home/faruk/gdrive/test_brainsplode2/T1w.nii.gz"
-OUT_DIR = "/home/faruk/Git/slowest-particle-simulator-on-earth/examples/test_01"
+OUT_DIR = create_export_folder(NII_FILE)
 MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
+
+SLICE_NR = 165
 
 DIMS = (256, 256)
 NR_ITER = 200
@@ -26,7 +29,7 @@ OFFSET_Y = 32
 # =============================================================================
 # Load nifti
 nii = nb.load(NII_FILE)
-data = nii.get_fdata()[:, 165, :]
+data = nii.get_fdata()[:, SLICE_NR, :]
 dims_data = data.shape
 
 # Embed data into square lattice
@@ -36,8 +39,7 @@ data = np.copy(temp)
 
 # Load Mask
 mask = nb.load(MASK)
-mask = mask.get_fdata()[:, 165, :]
-mask = (mask+1) % 2
+mask = mask.get_fdata()[:, SLICE_NR, :]
 
 # Embed mask into square lattice
 temp = np.zeros(DIMS)

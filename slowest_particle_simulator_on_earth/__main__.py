@@ -1,7 +1,5 @@
 """Main entry point."""
 
-import os
-import pathlib
 import argparse
 import nibabel as nb
 import numpy as np
@@ -10,7 +8,8 @@ from slowest_particle_simulator_on_earth import __version__
 from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
-from slowest_particle_simulator_on_earth.utils import save_img
+from slowest_particle_simulator_on_earth.utils import (
+    save_img, create_export_folder)
 
 
 def main():
@@ -54,8 +53,8 @@ def main():
     NII_FILE = args.filename
     NR_ITER = cfg.iterations
     SLICE_NR = cfg.slice_number
-    OUT_DIR = os.path.join(os.path.dirname(NII_FILE), "export")
-    pathlib.Path(OUT_DIR).mkdir(parents=True, exist_ok=True)
+
+    OUT_DIR = create_export_folder(NII_FILE)
 
     # -------------------------------------------------------------------------
     # Load nifti
@@ -101,9 +100,8 @@ def main():
     NR_PART = p_pos.shape[0]
 
     p_velo = np.zeros((NR_PART, 2))
-    p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -1
+    p_velo[:, 0] = (np.random.rand(NR_PART) + 1.5) * -1
     p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
-    # p_velo[:, 0] = -1
 
     p_mass = np.ones(NR_PART)
 
