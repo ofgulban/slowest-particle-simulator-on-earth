@@ -1,4 +1,4 @@
-<img src="/visuals/animation_01_opt.gif" width=250 align="right" />
+<img src="/visuals/animation_01_opt.gif" width=200 align="right" />
 
 # Slowest particle simulator on earth
 
