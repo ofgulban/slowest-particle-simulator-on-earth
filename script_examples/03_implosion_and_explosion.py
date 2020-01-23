@@ -6,18 +6,19 @@ from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
 from slowest_particle_simulator_on_earth.utils import (
-    save_img, create_export_folder)
+    save_img, create_export_folder, embed_data_into_square_lattice,
+    normalize_data_range)
 
 # =============================================================================
 # Parameters
-NII_FILE = "/home/faruk/gdrive/test_brainsplode2/T1w.nii.gz"
+NII_FILE = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped.nii.gz"
 OUT_DIR = create_export_folder(NII_FILE)
-MASK = "/home/faruk/gdrive/test_brainsplode2/brain_mask.nii.gz"
+MASK = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped_brain.nii.gz"
 
 SLICE_NR = 3
+NR_ITER = 200
 
-NR_ITER = 800
-DT = 0.25  # Time step (smaller = more accurate simulation)
+DT = 1  # Time step (smaller = more accurate simulation)
 GRAVITY = 0.05
 
 THR_MIN = 200
@@ -25,38 +26,23 @@ THR_MAX = 500
 
 OFFSET_X = 0
 OFFSET_Y = 32
+
 # =============================================================================
 # Load nifti
 nii = nb.load(NII_FILE)
 data = nii.get_fdata()[:, SLICE_NR, :]
-dims_data = np.array(data.shape)
-DIMS = (dims_data.max(), dims_data.max())
-
-# Embed data into square lattice
-temp = np.zeros(DIMS)
-temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = data
-data = np.copy(temp)
+data = embed_data_into_square_lattice(data)
+data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 
 # Load Mask
 mask = nb.load(MASK)
 mask = mask.get_fdata()[:, SLICE_NR, :]
-
-# Embed mask into square lattice
-temp = np.zeros(DIMS)
-temp[:, OFFSET_Y:OFFSET_Y+dims_data[1]] = mask
-mask = np.copy(temp)
-idx_mask_x, idx_mask_y = np.where((mask+1) % 2)
-
-# Normalize to 0-1 range
-data -= THR_MIN
-data[data < 0] = 0
-data[data > (THR_MAX - THR_MIN)] = THR_MAX - THR_MIN
-data = data / (THR_MAX - THR_MIN)
-data *= 0.5
+mask = embed_data_into_square_lattice(mask)
+idx_mask_x, idx_mask_y = np.where(mask == 0)
 
 # =============================================================================
 # Initialize particles
-x, y = np.where(data * mask)
+x, y = np.where(data * (mask != 0))
 p_pos = np.stack((x, y), axis=1)
 p_pos = p_pos.astype(float)
 
@@ -79,7 +65,11 @@ p_mass = np.ones(NR_PART)
 p_C = np.zeros((NR_PART, 2, 2))
 
 # Initialize cells
-cells = np.zeros(DIMS)
+cells = np.zeros(data.shape)
+
+# Some informative prints
+print("Output folder: {}".format(OUT_DIR))
+print("Number of particles: {}".format(NR_PART))
 
 # =============================================================================
 # Start simulation iterations
