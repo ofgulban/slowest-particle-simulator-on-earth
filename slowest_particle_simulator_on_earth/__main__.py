@@ -28,20 +28,26 @@ def main():
         help="Number of iterations. Equal to number of frames generated."
         )
     parser.add_argument(
-        '--explosiveness', type=float, required=False,
-        metavar=cfg.explosiveness, default=cfg.explosiveness,
-        help="Larger numbers for larger explosions."
+        '--slice_number', type=int, required=False,
+        metavar=cfg.slice_number, default=cfg.slice_number,
+        help="Slice on Y axis that will be visualized."
         )
     parser.add_argument(
-        '--slice_number', type=int, required=False,
-        metavar=cfg.explosiveness, default=cfg.explosiveness,
-        help="Slice on Y axis that will be visualized."
+        '--thr_min', type=int, required=False,
+        metavar=cfg.thr_min, default=cfg.thr_min,
+        help="Change values below this threshold to zero."
+        )
+    parser.add_argument(
+        '--thr_max', type=int, required=False,
+        metavar=cfg.thr_min, default=cfg.thr_min,
+        help="Truncate values above this threshold."
         )
 
     args = parser.parse_args()
     cfg.iterations = args.iterations
-    cfg.explosiveness = args.explosiveness
     cfg.slice_number = args.slice_number
+    cfg.thr_min = args.thr_min
+    cfg.thr_max = args.thr_max
 
     # Welcome message
     welcome_str = '{} {}'.format(
@@ -66,8 +72,7 @@ def main():
     nii = nb.load(NII_FILE)
     data = nii.get_fdata()[:, SLICE_NR, :]
     data = embed_data_into_square_lattice(data)
-    data = normalize_data_range(data, thr_min=data[data > 0].min(),
-                                thr_max=data[data > 0].max())
+    data = normalize_data_range(data, thr_min=cfg.thr_min, thr_max=cfg.thr_max)
 
     # -------------------------------------------------------------------------
     # Initialize particles
