@@ -4,7 +4,7 @@ import nibabel as nb
 import numpy as np
 from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
-    grid_to_particle_velocity)
+    grid_to_particle_velocity, particle_pos_to_grid)
 from slowest_particle_simulator_on_earth.utils import (
     save_img, create_export_folder, embed_data_into_square_lattice,
     normalize_data_range)
@@ -15,11 +15,11 @@ NII_FILE = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/
 OUT_DIR = create_export_folder(NII_FILE)
 MASK = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped_brain.nii.gz"
 
-SLICE_NR = 3
-NR_ITER = 200
+SLICE_NR = 165
 
+NR_ITER = 200
 DT = 1  # Time step (smaller = more accurate simulation)
-GRAVITY = 0.05
+GRAVITY = 0.00
 
 THR_MIN = 200
 THR_MAX = 500
@@ -53,12 +53,12 @@ x, y = None, None
 # Move particles to the center of cells
 p_pos[:, 0] += 0.5
 p_pos[:, 1] += 0.5
+p_pos_orig = np.copy(p_pos)
 
 NR_PART = p_pos.shape[0]
 
 p_velo = np.zeros((NR_PART, 2))
-p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -1
-p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
+dims = data.shape
 
 p_mass = np.ones(NR_PART)
 
@@ -75,6 +75,15 @@ print("Number of particles: {}".format(NR_PART))
 # Start simulation iterations
 for t in range(NR_ITER):
     p_weights = compute_interpolation_weights(p_pos)
+
+    if t % 20 == 0:
+        p_velo[:, 0] = (p_pos[:, 0] - dims[0] / 2) / -100
+        p_velo[:, 1] = (p_pos[:, 1] - dims[1] / 2) / -100
+        p_velo += np.random.rand(NR_PART, 2) - 0.5
+    elif t % 20 == 10:
+        p_velo[:, 0] = (p_pos[:, 0] - dims[0] / 2) / 100
+        p_velo[:, 1] = (p_pos[:, 1] - dims[1] / 2) / 100
+        p_velo += np.random.rand(NR_PART, 2) - 0.5
 
     c_mass, c_velo, c_values = particle_to_grid(
         p_pos, p_C, p_mass, p_velo, cells, p_weights, p_vals)
@@ -97,3 +106,23 @@ for t in range(NR_ITER):
     c_values[c_mass > 2] /= c_mass[c_mass > 2]
     save_img(c_values, OUT_DIR, suffix=str(t+1).zfill(3))
     print("Iteration: {}".format(t))
+
+# -----------------------------------------------------------------------------
+# Return particles to initial positions
+NR_FINAL_FRAMES = 30
+print("Epilogue")
+for j in range(NR_FINAL_FRAMES):
+    p_pos_end = p_pos + ((p_pos_orig - p_pos) * (j/NR_FINAL_FRAMES))
+
+    p_weights = compute_interpolation_weights(p_pos_end)
+
+    c_mass, c_values = particle_pos_to_grid(
+        p_pos_end, p_mass, cells, p_weights, p_vals)
+
+    # Add static
+    c_values[idx_mask_x, idx_mask_y] += data[idx_mask_x, idx_mask_y]
+
+    # Adjust brightness w.r.t. mass
+    c_values[c_mass > 2] /= c_mass[c_mass > 2]
+    save_img(c_values, OUT_DIR, suffix=str(t+j+1).zfill(3))
+    print("Iteration: {}".format(t+j+1))

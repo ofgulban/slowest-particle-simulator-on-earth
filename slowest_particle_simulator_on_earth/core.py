@@ -177,3 +177,42 @@ def clamp(p, v, d_min=0, d_max=100, rule="slip", bounce_factor=-0.5):
             v[1] /= bounce_factor
 
     return p, v
+
+
+def particle_pos_to_grid(p_pos, p_mass, cells, p_weights, p_vals):
+    """Only use particle positions to generate a new 2D grid."""
+    # useful derivatives
+    dims = cells.shape[0], cells.shape[1]
+    nr_part = p_pos.shape[0]
+
+    c_mass = np.zeros(dims)  # scalar field
+    c_values = np.zeros(dims)
+
+    for i in range(nr_part):
+        p = p_pos[i, :]  # particle coordinates
+        m = p_mass[i]  # particle masses
+        w = p_weights[i, :, :]  # particle neighbour interpolation weights
+        value = p_vals[i]  # particle values
+
+        # 9 cell neighbourhood of the particle
+        cell_idx = (np.floor(p)).astype(int)
+        for gx in range(3):
+            for gy in range(3):
+                weight = w[gx, 0] * w[gy, 1]
+
+                cell = np.array([cell_idx[0] + gx - 1, cell_idx[1] + gy - 1])
+                cell = cell.astype("int")
+                cell_dist = (cell - p) + 0.5
+
+                # MPM course equation 172
+                mass_contrib = weight * m
+
+                # Insert into grid
+                c_mass[cell[0], cell[1]] += mass_contrib
+
+                # For carrying voxel values (grayscale image)
+                value_contrib = weight * value
+                c_values[cell[0], cell[1]] += value_contrib
+
+
+    return c_mass, c_values
