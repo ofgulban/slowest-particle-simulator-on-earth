@@ -202,7 +202,6 @@ def particle_pos_to_grid(p_pos, p_mass, cells, p_weights, p_vals):
 
                 cell = np.array([cell_idx[0] + gx - 1, cell_idx[1] + gy - 1])
                 cell = cell.astype("int")
-                cell_dist = (cell - p) + 0.5
 
                 # MPM course equation 172
                 mass_contrib = weight * m
@@ -213,6 +212,5 @@ def particle_pos_to_grid(p_pos, p_mass, cells, p_weights, p_vals):
                 # For carrying voxel values (grayscale image)
                 value_contrib = weight * value
                 c_values[cell[0], cell[1]] += value_contrib
-
 
     return c_mass, c_values
