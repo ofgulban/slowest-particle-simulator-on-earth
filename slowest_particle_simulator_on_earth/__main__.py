@@ -44,8 +44,8 @@ def main():
         )
     parser.add_argument(
         '--thr_max', type=int, required=False,
-        metavar=cfg.thr_min, default=cfg.thr_min,
-        help="Truncate values above this threshold."
+        metavar=cfg.thr_max, default=cfg.thr_max,
+        help="Change values above this threshold to this value."
         )
 
     args = parser.parse_args()
