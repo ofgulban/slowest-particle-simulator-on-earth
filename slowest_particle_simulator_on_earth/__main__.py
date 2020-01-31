@@ -28,6 +28,11 @@ def main():
         help="Number of iterations. Equal to number of frames generated."
         )
     parser.add_argument(
+        '--slice_axis', type=int, required=False,
+        metavar=cfg.slice_axis, default=cfg.slice_axis,
+        help="Slice axis 0, 1, 2 (e.g. transversal, coronal, saggital)"
+        )
+    parser.add_argument(
         '--slice_number', type=int, required=False,
         metavar=cfg.slice_number, default=cfg.slice_number,
         help="Slice on Y axis that will be visualized."
@@ -45,6 +50,7 @@ def main():
 
     args = parser.parse_args()
     cfg.iterations = args.iterations
+    cfg.slice_axis = args.slice_axis
     cfg.slice_number = args.slice_number
     cfg.thr_min = args.thr_min
     cfg.thr_max = args.thr_max
@@ -59,6 +65,7 @@ def main():
     # Parameters
     NII_FILE = args.filename
     NR_ITER = cfg.iterations
+    SLICE_AXIS = cfg.slice_axis
     SLICE_NR = cfg.slice_number
 
     OUT_DIR = create_export_folder(NII_FILE)
@@ -70,7 +77,14 @@ def main():
     # -------------------------------------------------------------------------
     # Load nifti
     nii = nb.load(NII_FILE)
-    data = nii.get_fdata()[:, SLICE_NR, :]
+    if SLICE_AXIS == 0:
+        data = nii.get_fdata()[SLICE_NR, :, :]
+    elif SLICE_AXIS == 1:
+        data = nii.get_fdata()[:, SLICE_NR, :]
+    elif SLICE_AXIS == 2:
+        data = nii.get_fdata()[:, :, SLICE_NR]
+    else:
+        raise ValueError("Invalid slice axis. Possible values are 0, 1, 2.")
     data = embed_data_into_square_lattice(data)
     data = normalize_data_range(data, thr_min=cfg.thr_min, thr_max=cfg.thr_max)
 
