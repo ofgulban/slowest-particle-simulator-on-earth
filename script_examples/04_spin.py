@@ -16,7 +16,7 @@ OUT_DIR = create_export_folder(NII_FILE)
 MASK = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped_brain.nii.gz"
 
 SLICE_NR = 3
-NR_ITER = 800
+NR_ITER = 600
 
 DT = 1  # Time step (smaller = more accurate simulation)
 GRAVITY = 0.00
@@ -38,7 +38,8 @@ data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 mask = nb.load(MASK)
 mask = mask.get_fdata()[:, SLICE_NR, :]
 mask = embed_data_into_square_lattice(mask)
-idx_mask_x, idx_mask_y = np.where(mask == 0)
+static = (mask == 0) * data
+idx_mask_x, idx_mask_y = np.where(static != 0)
 
 # =============================================================================
 # Initialize particles
@@ -75,10 +76,14 @@ print("Number of particles: {}".format(NR_PART))
 for t in range(NR_ITER):
     p_weights = compute_interpolation_weights(p_pos)
 
-    if t % 40 == 0:
+    if t < 410:
         # -y x
-        p_velo[:, 0] = (p_pos[:, 1] - (dims[1] / 2)) / -100
-        p_velo[:, 1] = (p_pos[:, 0] - (dims[0] / 2)) / 100
+        p_velo[:, 0] = (p_pos[:, 1] - (dims[1] / 2)) / -(dims[1] / 2)
+        p_velo[:, 1] = (p_pos[:, 0] - (dims[0] / 2)) / (dims[0] / 2)
+    elif t == 410:
+        GRAVITY = 0.1
+        p_velo[:, 0] = (np.random.rand(NR_PART) + 0.75) * -1
+        p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
 
     c_mass, c_velo, c_values = particle_to_grid(
         p_pos, p_C, p_mass, p_velo, cells, p_weights, p_vals)
@@ -87,8 +92,7 @@ for t in range(NR_ITER):
         c_velo, c_mass, dt=DT, gravity=GRAVITY)
 
     # Manipulate grid velocities
-    c_velo[idx_mask_x, idx_mask_y, :] *= -1.25
-    c_velo += (np.random.rand(c_velo.shape[0], c_velo.shape[1], 2) - 0.5) / 10
+    c_velo[idx_mask_x, idx_mask_y, :] *= -1
 
     p_pos, p_velo = grid_to_particle_velocity(
         p_pos, p_velo, p_weights, c_velo, dt=DT,
