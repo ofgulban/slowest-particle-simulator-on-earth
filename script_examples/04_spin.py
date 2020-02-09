@@ -1,4 +1,4 @@
-"""Script example 2: brain explodes skull stays still."""
+"""Script example 4: brain explodes spins within skull and explodes."""
 
 import nibabel as nb
 import numpy as np
