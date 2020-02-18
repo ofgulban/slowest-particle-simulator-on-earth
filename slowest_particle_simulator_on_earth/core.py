@@ -139,8 +139,9 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.,
         p += v * dt
 
         # Act on escaped particles
-        p, v = clamp(p, v, d_min=0, d_max=dims[1], rule="bounce",
-                     bounce_factor=bounce_factor)
+        p, v = clamp(
+            p, v, d_min_x=0, d_max_x=dims[0], d_min_y=0, d_max_y=dims[1],
+            rule="bounce", bounce_factor=bounce_factor)
 
         # Update particles
         p_pos[i] = p[:]
@@ -149,31 +150,32 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.,
     return p_pos, p_velo
 
 
-def clamp(p, v, d_min=0, d_max=100, rule="slip", bounce_factor=-0.5):
+def clamp(p, v, d_min_x=0, d_max_x=100, d_min_y=0, d_max_y=100,
+          rule="slip", bounce_factor=-0.5):
     """Prevent particles escaping grid."""
 
     if rule == "slip":  # Clamp positions
-        if p[0] < d_min + 1:
-            p[0] = d_min + 1
-        elif p[0] > d_max - 2:
-            p[0] = d_max - 2
-        if p[1] < d_min + 1:
-            p[1] = d_min + 1
-        elif p[1] > d_max - 2:
-            p[1] = d_max - 2
+        if p[0] < d_min_x + 1:
+            p[0] = d_min_x + 1
+        elif p[0] > d_max_x - 2:
+            p[0] = d_max_x - 2
+        if p[1] < d_min_y + 1:
+            p[1] = d_min_y + 1
+        elif p[1] > d_max_y - 2:
+            p[1] = d_max_y - 2
 
     elif rule == "bounce":
-        if p[0] < d_min + 1:
-            p[0] = d_min + 1
+        if p[0] < d_min_x + 1:
+            p[0] = d_min_x + 1
             v[0] /= bounce_factor
-        elif p[0] > d_max - 2:
-            p[0] = d_max - 2
+        elif p[0] > d_max_x - 2:
+            p[0] = d_max_x - 2
             v[0] /= bounce_factor
-        if p[1] < d_min + 1:
-            p[1] = d_min + 1
+        if p[1] < d_min_y + 1:
+            p[1] = d_min_y + 1
             v[1] /= bounce_factor
-        elif p[1] > d_max - 2:
-            p[1] = d_max - 2
+        elif p[1] > d_max_y - 2:
+            p[1] = d_max_y - 2
             v[1] /= bounce_factor
 
     return p, v
