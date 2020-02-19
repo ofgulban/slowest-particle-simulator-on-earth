@@ -4,6 +4,7 @@ import pathlib
 import matplotlib.pyplot as plt
 import numpy as np
 from os.path import join, dirname, isdir
+from slowest_particle_simulator_on_earth import __version__
 
 
 def save_img(img, out_dir, suffix="", invert=False):
@@ -55,3 +56,14 @@ def normalize_data_range(data, thr_min=0, thr_max=500):
     data = data / (thr_max - thr_min)
     data *= 0.5
     return data
+
+def log_welcome():
+    """Procedure for printing welcome message with version number."""
+    welcome_str = '{} {}'.format(
+        'Slowest particle simulator on earth', __version__)
+    welcome_decor = '=' * len(welcome_str)
+    print('{}\n{}\n{}'.format(welcome_decor, welcome_str, welcome_decor))
+
+def log_progress(i, total_i):
+    """Procedure for printing progress."""
+    print("  Iteration: {}/{}".format(i, total_i), end='\r')

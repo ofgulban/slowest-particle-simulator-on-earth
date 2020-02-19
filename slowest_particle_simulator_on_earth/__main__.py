@@ -4,13 +4,12 @@ import argparse
 import nibabel as nb
 import numpy as np
 import slowest_particle_simulator_on_earth.config as cfg
-from slowest_particle_simulator_on_earth import __version__
 from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
 from slowest_particle_simulator_on_earth.utils import (
     save_img, create_export_folder, embed_data_into_square_lattice,
-    normalize_data_range)
+    normalize_data_range, log_welcome, log_progress)
 
 
 def main():
@@ -55,11 +54,7 @@ def main():
     cfg.thr_min = args.thr_min
     cfg.thr_max = args.thr_max
 
-    # Welcome message
-    welcome_str = '{} {}'.format(
-        'Slowest particle simulator on earth', __version__)
-    welcome_decor = '=' * len(welcome_str)
-    print('{}\n{}\n{}'.format(welcome_decor, welcome_str, welcome_decor))
+    log_welcome()
 
     # =========================================================================
     # Parameters
@@ -116,8 +111,8 @@ def main():
     cells = np.zeros(data.shape)
 
     # Some informative prints
-    print("Output folder:\n  {}".format(OUT_DIR))
-    print("Number of particles: {}".format(NR_PART))
+    print("  Output folder:\n  {}".format(OUT_DIR))
+    print("  Number of particles: {}".format(NR_PART))
 
     # -------------------------------------------------------------------------
     # Start simulation iterations
@@ -137,7 +132,7 @@ def main():
         # Adjust brightness w.r.t. mass
         c_values[c_mass > 2] /= c_mass[c_mass > 2]
         save_img(c_values, OUT_DIR, suffix=str(t+1).zfill(3))
-        print("Iteration: {}".format(t))
+        log_progress
 
     # =========================================================================
 
