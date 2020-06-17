@@ -11,39 +11,39 @@ from slowest_particle_simulator_on_earth.utils import (
 
 # =============================================================================
 # Parameters
-NII_FILE = "/home/faruk/gdrive/OHBM2020_hackathon/dolphin_explosion/MRI-n4_filtered.nii.gz"
-MASK = "/home/faruk/gdrive/OHBM2020_hackathon/dolphin_explosion/MRI-n4_cerebrum_08.nii.gz"
+NII_FILE = "/home/faruk/gdrive/OHBM2020_hackathon/bigbrain/full16_100um_optbal_roi_250um.nii.gz"
+MASK = "/home/faruk/gdrive/OHBM2020_hackathon/bigbrain/cortex_fromKonrad_roi_250um_layers_equidist.nii.gz"
 
 OUT_DIR = create_export_folder(NII_FILE)
 print("Output folder: {}".format(OUT_DIR))
 
-SLICE_NR = 110
+SLICE_NR = 145
 
 DIMS = (256, 256)
-NR_ITER = 200
+NR_ITER = 400
 DT = 1  # Time step (smaller = more accurate simulation)
 GRAVITY = 0.05
 
-THR_MIN = 50
-THR_MAX = 210
+THR_MIN = 35000
+THR_MAX = 65000
 
 # =============================================================================
 # Load nifti
 nii = nb.load(NII_FILE)
-data = nii.get_fdata()[:, :, SLICE_NR]
+data = nii.get_fdata()[:, SLICE_NR, :]
 data = embed_data_into_square_lattice(data)
 data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 
 # Load Mask
 mask = nb.load(MASK)
-mask = mask.get_fdata()[:, :, SLICE_NR]
+mask = mask.get_fdata()[:, SLICE_NR, :]
 mask = mask.astype(int)
 uniq = np.unique(mask)[::-1]
 mask = embed_data_into_square_lattice(mask)
 
 # (optional) rotate
-data = data.T
-mask = mask.T
+data = data[::-1, ::-1]
+mask = mask[::-1, ::-1]
 
 # Initialize cells
 cells = np.zeros(data.shape)
@@ -115,7 +115,7 @@ for i in uniq[0:-1]:  # Big numbers explode first
 
         # Adjust brightness w.r.t. mass
         c_values[c_mass > 2] /= c_mass[c_mass > 2]
-        c_values *= 1.5
+        c_values *= temp_brigtness_multiplier
         save_img(c_values, OUT_DIR, suffix=str(t_offset+t+1).zfill(3))
         print("  Iteration: {}".format(t_offset+t))
 
