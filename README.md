@@ -28,6 +28,13 @@ slowest_particle_simulator_on_earth /path/to/image.nii.gz --slice_number 165 --t
 ## Making a gif
 *slowest_particle_simulator_on_earth* creates individual pictures which can be compiled into an animated gif. I use the following command (on linux) to convert the frames into animated gifs:
 ```
+convert -delay 1 -loop 0 export_05/*.png animation.gif
+```
+
+You can change `-delay` parameters to make your gif faster or slower.
+
+Alternatively, you can also create a movie rather than a gif:
+```
 ffmpeg -r 1 -i /path/to/export/frame_%03d.png -pix_fmt yuv420p -r 30 out.mp4
 ```
 
