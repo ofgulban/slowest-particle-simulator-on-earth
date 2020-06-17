@@ -34,7 +34,7 @@ You can change `-delay` parameter to make your gif faster or slower.
 
 Alternatively, you can also create a movie rather than a gif:
 ```
-ffmpeg -r 1 -i /path/to/export/frame_%03d.png -pix_fmt yuv420p -r 30 out.mp4
+ffmpeg -r 30 -i /path/to/export/frame_%03d.png -pix_fmt yuv420p -r 30 out.mp4
 ```
 
 ## Support
