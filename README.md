@@ -30,8 +30,7 @@ slowest_particle_simulator_on_earth /path/to/image.nii.gz --slice_number 165 --t
 ```
 convert -delay 1 -loop 0 /path/to/export/*.png out.gif
 ```
-
-You can change `-delay` parameters to make your gif faster or slower.
+You can change `-delay` parameter to make your gif faster or slower.
 
 Alternatively, you can also create a movie rather than a gif:
 ```
