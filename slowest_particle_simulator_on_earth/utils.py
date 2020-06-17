@@ -3,8 +3,27 @@
 import pathlib
 import matplotlib.pyplot as plt
 import numpy as np
+import nibabel as nb
 from os.path import join, dirname, isdir
 from slowest_particle_simulator_on_earth import __version__
+
+def nifti_reader(nii_filename, slice_axis, slice_numb, rotate):
+    nii = nb.load(nii_filename)
+    
+    if slice_axis == 0:
+        data = nii.get_fdata()[slice_numb, :, :]
+    elif slice_axis == 1:
+        data = nii.get_fdata()[:, slice_numb, :]
+    elif slice_axis == 2:
+        data = nii.get_fdata()[:, :, slice_numb]
+    else:
+        raise ValueError("Invalid slice axis. Possible values are 0, 1, 2.")
+    rotate_time = rotate / 90 # numbers of time by 90 degrees
+    if rotate_time in range(3):
+        data = np.rot90(data, rotate_time)
+    else:
+        raise ValueError("Invalid degrees of rotation. Possible values are 90, 180, 270.")
+    return data
 
 
 def save_img(img, out_dir, suffix="", invert=False):
