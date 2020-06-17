@@ -20,7 +20,7 @@ pip install slowest_particle_simulator_on_earth
 ## Usage
 Type the following command on your command line:
 ```
-slowest_particle_simulator_on_earth /path/to/image.nii.gz --slice_number 165 --thr_min 200 --thr_max 500
+slowest_particle_simulator_on_earth /path/to/image.nii.gz --slice_number 3 --thr_min 200 --thr_max 500
 ```
 
 *Note:* You can select different slice numbers. For now the slices can only be chosen on one axis. I am going to make this more flexible later.
