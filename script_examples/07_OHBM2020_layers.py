@@ -11,16 +11,16 @@ from slowest_particle_simulator_on_earth.utils import (
 
 # =============================================================================
 # Parameters
-NII_FILE = "/home/faruk/gdrive/OHBM2020_hackathon/layer_explosion/Ding.nii.gz"
+NII_FILE = "/home/faruk/gdrive/OHBM2020_hackathon/layer_explosion/Ding_masked63.nii.gz"
 MASK = "/home/faruk/gdrive/OHBM2020_hackathon/layer_explosion/stages2.nii.gz"
 
 OUT_DIR = create_export_folder(NII_FILE)
 print("Output folder: {}".format(OUT_DIR))
 
-SLICE_NR = 58
+SLICE_NR = 63
 
 DIMS = (256, 256)
-NR_ITER = 10
+NR_ITER = 100
 DT = 1  # Time step (smaller = more accurate simulation)
 GRAVITY = 0.05
 
@@ -33,31 +33,28 @@ OFFSET_Y = 32
 # =============================================================================
 # Load nifti
 nii = nb.load(NII_FILE)
-data = nii.get_fdata()[:, SLICE_NR, :]
+data = nii.get_fdata()[SLICE_NR, :, :]
 data = embed_data_into_square_lattice(data)
 data = normalize_data_range(data, thr_min=THR_MIN, thr_max=THR_MAX)
 
 # Load Mask
 mask = nb.load(MASK)
-mask = mask.get_fdata()[:, SLICE_NR, :]
+mask = mask.get_fdata()[SLICE_NR, :, :]
 mask = mask.astype(int)
-uniq = np.unique(mask)
+uniq = np.unique(mask)[::-1]
 mask = embed_data_into_square_lattice(mask)
 
 # Initialize cells
 cells = np.zeros(data.shape)
 
-# Some informative prints
-
 # =============================================================================
-idx_mask_x, idx_mask_y = np.where(mask == 0)
 p_pos = np.array([[], []]).T
 p_vals = np.array([])
 p_velo = np.array([[], []]).T
 p_mass = np.array([])
 t_offset = 0
-
-for i in uniq[1:]:
+stage = 0
+for i in uniq[0:-1]:  # Big numbers explode first
     # Note coordinates of voxels in each stage (0 is for static)
     x, y = np.where(mask == i)
     p_pos_new = np.stack((x, y), axis=1)
@@ -85,9 +82,17 @@ for i in uniq[1:]:
 
     p_C = np.zeros((nr_part, 2, 2))
 
+    # Some informative prints
+    print("Stage: {}".format(stage))
     print("Number of particles: {}".format(nr_part))
 
+    # Static voxels
+    idx_mask_x, idx_mask_y = np.where(mask < i)
+
     # =============================================================================
+    # Save initial image
+    save_img(data, OUT_DIR, suffix=str(0).zfill(3))
+
     # Start simulation iterations
     for t in range(NR_ITER):
         p_weights = compute_interpolation_weights(p_pos)
@@ -108,5 +113,7 @@ for i in uniq[1:]:
         # Adjust brightness w.r.t. mass
         c_values[c_mass > 2] /= c_mass[c_mass > 2]
         save_img(c_values, OUT_DIR, suffix=str(t_offset+t+1).zfill(3))
-        print("Iteration: {}".format(t_offset+t))
+        print("  Iteration: {}".format(t_offset+t))
+
     t_offset += t + 1
+    stage += 1
