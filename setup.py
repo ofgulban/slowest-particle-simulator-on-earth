@@ -23,7 +23,7 @@ setup(
     url="https://github.com/ofgulban/slowest-particle-simulator-on-earth",
     author="Omer Faruk Gulban",
     packages=["slowest_particle_simulator_on_earth"],
-    install_requires=["numpy>=1.17", "matplotlib>=3.1", "nibabel>=2.2"],
+    install_requires=["numpy>=1.18", "matplotlib>=3.2", "nibabel>=3.1"],
     keywords=["mri", "nifti", "particle", "voxel", "simulation", "explosion"],
     zip_safe=True,
     entry_points={
