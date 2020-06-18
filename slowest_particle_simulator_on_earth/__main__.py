@@ -30,7 +30,7 @@ def main():
     parser.add_argument(
         '--slice_number', type=int, required=False,
         metavar=cfg.slice_number, default=cfg.slice_number,
-        help="Slice on Y axis that will be visualized."
+        help="Slice on the chosen axis that will be visualized."
         )
     parser.add_argument(
         '--thr_min', type=int, required=False,
