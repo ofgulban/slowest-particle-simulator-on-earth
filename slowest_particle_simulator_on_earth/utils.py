@@ -18,8 +18,8 @@ def nifti_reader(nii_filename, slice_axis, slice_numb, rotate):
         data = nii.get_fdata()[:, :, slice_numb]
     else:
         raise ValueError("Invalid slice axis. Possible values are 0, 1, 2.")
-    rotate_time = rotate / 90 # numbers of time by 90 degrees
-    if rotate_time in range(3):
+    rotate_time = rotate / 90  # numbers of time by 90 degrees
+    if rotate_time in range(4):
         data = np.rot90(data, rotate_time)
     else:
         raise ValueError("Invalid degrees of rotation. Possible values are 90, 180, 270.")
