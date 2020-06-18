@@ -13,21 +13,18 @@ from slowest_particle_simulator_on_earth.utils import (
 
 # =============================================================================
 # Parameters
-PNG_FILE1 = "/home/faruk/gdrive/test_brainsplode2/ohbm/OHBM2020_1.png"
-PNG_FILE2 = "/home/faruk/gdrive/test_brainsplode2/ohbm/g982.png"
+PNG_FILE1 = "/home/faruk/gdrive/OHBM2020_hackathon/thank_you/thank_you.png"
 OUT_DIR = create_export_folder(PNG_FILE1)
 
-NR_ITER = 200
+NR_ITER = 400
 
-DT = 1  # Time step (smaller = more accurate simulation)
-GRAVITY = 0.2
+DT = 0.5  # Time step (smaller = more accurate simulation)
+GRAVITY = 0.1
 
 # =============================================================================
 # Load png (BGR)
 data_in_1 = cv2.imread(PNG_FILE1)
 data_in_1 = np.asarray(data_in_1, dtype=float)
-data_in_2 = cv2.imread(PNG_FILE2)
-data_in_2 = np.asarray(data_in_2, dtype=float)
 
 # Select a channel
 data_1_moving = data_in_1[:, :, 2]
@@ -42,7 +39,7 @@ data_1_bounce = zoom(data_1_bounce, 1/2, mode="nearest", prefilter=False)
 # Normalize to 0-0.5 range
 data_1_moving = normalize_data_range(data_1_moving, thr_min=0, thr_max=255)*2
 
-static = np.where(data_1_static)
+static = np.where(data_1_static > 0.5)
 
 # Binarize
 # data = ~(data > 0)
@@ -70,8 +67,8 @@ p_pos[:, 0] += 0.5
 p_pos[:, 1] += 0.5
 
 p_velo = np.zeros((NR_PART, 2))
-p_velo[:, 0] = (np.random.rand(NR_PART) + 0.25) * -1
-p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 1
+p_velo[:, 0] = (np.random.rand(NR_PART) + 0.25) * -3
+p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
 
 p_mass = np.ones(NR_PART)
 
