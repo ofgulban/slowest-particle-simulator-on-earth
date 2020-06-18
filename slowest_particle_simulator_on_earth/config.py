@@ -8,3 +8,5 @@ slice_number = 165
 gravity = 0.05
 thr_min = 0
 thr_max = 500
+
+degree_rotate = 0

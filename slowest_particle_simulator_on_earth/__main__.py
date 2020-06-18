@@ -1,7 +1,6 @@
 """Main entry point."""
 
 import argparse
-import nibabel as nb
 import numpy as np
 import slowest_particle_simulator_on_earth.config as cfg
 from slowest_particle_simulator_on_earth.core import (
@@ -9,7 +8,7 @@ from slowest_particle_simulator_on_earth.core import (
     grid_to_particle_velocity)
 from slowest_particle_simulator_on_earth.utils import (
     save_img, create_export_folder, embed_data_into_square_lattice,
-    normalize_data_range, log_welcome, log_progress)
+    normalize_data_range, log_welcome, log_progress, nifti_reader)
 
 
 def main():
@@ -34,7 +33,7 @@ def main():
     parser.add_argument(
         '--slice_number', type=int, required=False,
         metavar=cfg.slice_number, default=cfg.slice_number,
-        help="Slice on Y axis that will be visualized."
+        help="Slice on the chosen axis that will be visualized."
         )
     parser.add_argument(
         '--thr_min', type=int, required=False,
@@ -46,6 +45,11 @@ def main():
         metavar=cfg.thr_max, default=cfg.thr_max,
         help="Change values above this threshold to this value."
         )
+    parser.add_argument(
+        '--rotate', type=int, required=False,
+        metavar=cfg.degree_rotate, default=cfg.degree_rotate,
+        help="Rotate the image by 90, 180, 270 degree by the slice axis."
+        )
 
     args = parser.parse_args()
     cfg.iterations = args.iterations
@@ -53,6 +57,7 @@ def main():
     cfg.slice_number = args.slice_number
     cfg.thr_min = args.thr_min
     cfg.thr_max = args.thr_max
+    cfg.degree_rotate = args.rotate
 
     log_welcome()
 
@@ -62,6 +67,7 @@ def main():
     NR_ITER = cfg.iterations
     SLICE_AXIS = cfg.slice_axis
     SLICE_NR = cfg.slice_number
+    DEGREE_ROTATE = cfg.degree_rotate
 
     OUT_DIR = create_export_folder(NII_FILE)
 
@@ -71,15 +77,7 @@ def main():
 
     # -------------------------------------------------------------------------
     # Load nifti
-    nii = nb.load(NII_FILE)
-    if SLICE_AXIS == 0:
-        data = nii.get_fdata()[SLICE_NR, :, :]
-    elif SLICE_AXIS == 1:
-        data = nii.get_fdata()[:, SLICE_NR, :]
-    elif SLICE_AXIS == 2:
-        data = nii.get_fdata()[:, :, SLICE_NR]
-    else:
-        raise ValueError("Invalid slice axis. Possible values are 0, 1, 2.")
+    data = nifti_reader(NII_FILE, SLICE_AXIS, SLICE_NR, DEGREE_ROTATE)
     data = embed_data_into_square_lattice(data)
     data = normalize_data_range(data, thr_min=cfg.thr_min, thr_max=cfg.thr_max)
 
