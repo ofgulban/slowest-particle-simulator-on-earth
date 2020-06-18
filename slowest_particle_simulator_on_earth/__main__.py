@@ -7,8 +7,8 @@ from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
     grid_to_particle_velocity)
 from slowest_particle_simulator_on_earth.utils import (
-    nifti_reader, save_img, create_export_folder, embed_data_into_square_lattice,
-    normalize_data_range, log_welcome, log_progress)
+    save_img, create_export_folder, embed_data_into_square_lattice,
+    normalize_data_range, log_welcome, log_progress, nifti_reader)
 
 
 def main():
@@ -33,7 +33,7 @@ def main():
     parser.add_argument(
         '--slice_number', type=int, required=False,
         metavar=cfg.slice_number, default=cfg.slice_number,
-        help="Slice on Y axis that will be visualized."
+        help="Slice on the chosen axis that will be visualized."
         )
     parser.add_argument(
         '--thr_min', type=int, required=False,
@@ -67,6 +67,7 @@ def main():
     NR_ITER = cfg.iterations
     SLICE_AXIS = cfg.slice_axis
     SLICE_NR = cfg.slice_number
+    DEGREE_ROTATE = cfg.degree_rotate
 
     OUT_DIR = create_export_folder(NII_FILE)
 
@@ -76,7 +77,7 @@ def main():
 
     # -------------------------------------------------------------------------
     # Load nifti
-    data = nifti_reader(NII_FILE, SLICE_AXIS, SLICE_NR, cfg.degree_rotate)
+    data = nifti_reader(NII_FILE, SLICE_AXIS, SLICE_NR, DEGREE_ROTATE)
     data = embed_data_into_square_lattice(data)
     data = normalize_data_range(data, thr_min=cfg.thr_min, thr_max=cfg.thr_max)
 
