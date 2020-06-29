@@ -1,3 +1,4 @@
+<!--(https://raw.githubusercontent.com/ofgulban/slowest-particle-simulator-on-earth/master/visuals/animation_01_opt.gif)-->
 <img src="/visuals/animation_01_opt.gif" width=200 align="right" />
 
 # Slowest particle simulator on earth
