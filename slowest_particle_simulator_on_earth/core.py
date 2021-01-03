@@ -33,7 +33,7 @@ def compute_interpolation_weights(p_pos):
     # Useful derivatives
     nr_part = p_pos.shape[0]
     # Initialize new variables
-    p_weights = np.zeros((nr_part, 3, 2))  # n × neighbour × xy contributios
+    p_weights = np.zeros((nr_part, 3, 2))  # n × neighbour × xy contributions
     # Quadratic interpolation weights
     for i in range(nr_part):
         p = p_pos[i]  # particle coordinates
@@ -45,7 +45,8 @@ def compute_interpolation_weights(p_pos):
     return p_weights
 
 
-def particle_to_grid(p_pos, p_C, p_mass, p_velo, cells, p_weights, p_vals):
+def particle_to_grid(p_pos, p_F, p_mass, p_velo, cells, p_weights, p_vals,
+                     p_volu, dt=1.0):
     """Compute a scalar field using particles."""
     # useful derivatives
     dims = cells.shape[0], cells.shape[1]
@@ -57,7 +58,36 @@ def particle_to_grid(p_pos, p_C, p_mass, p_velo, cells, p_weights, p_vals):
 
     for i in range(nr_part):
         p = p_pos[i, :]  # particle coordinates
-        C = p_C[i, :, :]  # TODO: What is this variable?
+
+        # Deformation gradient??
+        F = p_F[i, :, :]
+        J = np.linalg.det(F)
+        p_volu[i] = p_volu[i] * J
+
+        # Useful matrices for Neo-Hookean model
+        F_T = F.T
+        F_inv_T = np.linalg.inv(F_T)
+        F_minus_F_inv_T = F - F_inv_T
+
+        # MPM course equation 48
+        elastic_lambda = 10.  # Parametrize this
+        elastic_mu = 20.  # Parametrize this
+        P_term_0 = elastic_mu * (F_minus_F_inv_T)
+        P_term_1 = elastic_lambda * np.log(J) * F_inv_T
+        P = P_term_0 + P_term_1
+
+        # cauchy_stress = (1 / det(F)) * P * F_T
+        # equation 38, MPM course
+        stress = (1.0 / J) * np.matmul(P, F_T)
+
+        # NOTE(nialltl): (M_p)^-1 = 4, see APIC paper and MPM course page 42
+        # this term is used in MLS-MPM paper eq. 16. with quadratic weights,
+        # Mp = (1/4) * (delta_x)^2. In this simulation, delta_x = 1, because
+        # I scale the rendering of the domain rather than the domain itself.
+        # We multiply by dt as part of the process of fusing the momentum and
+        # force update for MLS-MPM
+        eq_16_term_0 = -p_volu[i] * 4 * stress * dt
+
         m = p_mass[i]  # particle masses
         v = p_velo[i, :]  # particle velocities
         w = p_weights[i, :, :]  # particle neighbour interpolation weights
@@ -72,14 +102,19 @@ def particle_to_grid(p_pos, p_C, p_mass, p_velo, cells, p_weights, p_vals):
                 cell = np.array([cell_idx[0] + gx - 1, cell_idx[1] + gy - 1])
                 cell = cell.astype("int")
                 cell_dist = (cell - p) + 0.5
-                Q = np.dot(C, cell_dist)
+                Q = np.dot(F, cell_dist)  # TODO: C or F??
 
                 # MPM course equation 172
                 mass_contrib = weight * m
-
-                # Insert into grid
                 c_mass[cell[0], cell[1]] += mass_contrib
+
+                # APIC P2G momentum contribution
                 c_velo[cell[0], cell[1], :] += mass_contrib * (v + Q)
+
+                # Fused force/momentum update from MLS-MPM
+                # see MLS-MPM paper, equation listed after eqn. 28
+                momentum = np.matmul(eq_16_term_0 * weight, cell_dist)
+                c_velo[cell[0], cell[1], :] += momentum
 
                 # For carrying voxel values (grayscale image)
                 value_contrib = weight * value
@@ -99,20 +134,25 @@ def grid_velocity_update(c_velo, c_mass, dt=1., gravity=0.05):
     return c_velo
 
 
-def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.,
+def grid_to_particle_velocity(p_pos, p_velo, p_weights, p_C, c_velo, dt=1.,
                               rule="bounce", bounce_factor=0.5):
     """Update particles based on velocities on the grid."""
     dims = c_velo.shape
     nr_part = p_pos.shape[0]
     # Reset particle velocity
-    p_velo *= 0
+    p_velo *= 0.
 
     for i in range(nr_part):
         p = p_pos[i, :]
         v = p_velo[i, :]
         w = p_weights[i, :, :]
 
-        # Construct affine per-particle momentum matrix from (APIC)/MLS-MPM.
+        # NOTE(nialltl): Constructing affine per-particle momentum matrix from
+        # APIC / MLS-MPM. See APIC paper:
+        # <https://web.archive.org/web/20190427165435/https://www.math.ucla.edu/~jteran/papers/JSSTS15.pdf>,
+        # page 6 below eq. 11 for clarification. This is calculating C=B*(D^-1)
+        # for APIC eq. 8, where B is calculated in the inner loop at (D^-1)=4
+        # is a constant when using quadratic interpolation functions.
         B = np.zeros((2, 2))
 
         # 9 cell neighbourhood of the particle
@@ -133,7 +173,7 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.,
                 B += term
                 v += weighted_velocity
 
-        # p_C[i] = B * 4  # unused for now
+        p_C[i] = B * 4  # unused for now
 
         # Advect particles
         p += v * dt
@@ -147,13 +187,12 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, c_velo, dt=1.,
         p_pos[i] = p[:]
         p_velo[i] = v[:]
 
-    return p_pos, p_velo
+    return p_pos, p_velo, p_C
 
 
 def clamp(p, v, d_min_x=0, d_max_x=100, d_min_y=0, d_max_y=100,
           rule="slip", bounce_factor=-0.5):
     """Prevent particles escaping grid."""
-
     if rule == "slip":  # Clamp positions
         if p[0] < d_min_x + 1:
             p[0] = d_min_x + 1
