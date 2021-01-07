@@ -19,7 +19,7 @@ setup(
     name="slowest_particle_simulator_on_earth",
     description=("A very slow particle simulator for exploding nifti files."),
     license="BSD-3-clause",
-    version="0.0.7",
+    version="0.0.8",
     url="https://github.com/ofgulban/slowest-particle-simulator-on-earth",
     author="Omer Faruk Gulban",
     packages=["slowest_particle_simulator_on_earth"],

@@ -75,12 +75,13 @@ def particle_to_grid_volume(p_pos, p_mass, p_weights, cells):
 
 
 def particle_to_grid(p_pos, p_C, p_F, p_mass, p_velo, cells, p_weights, p_vals,
-                     p_volu, c_mass, dt=1.0):
+                     p_volu, dt=1.0):
     """Compute a scalar field using particles."""
     # useful derivatives
     dims = cells.shape[0], cells.shape[1]
     nr_part = p_velo.shape[0]
 
+    # c_mass = np.zeros(dims)
     c_velo = np.zeros(dims + (2,))  # vector field
     c_values = np.zeros(dims)
 
@@ -162,10 +163,10 @@ def grid_velocity_update(c_velo, c_mass, dt=1., gravity=0.05):
     c_velo[idx, :] += dt * np.array([gravity, 0])
 
     # "slip" boundary conditions
-    c_velo[0, :] = 0
-    c_velo[-1, :] = 0
-    c_velo[:, 0] = 0
-    c_velo[:, -1] = 0
+    c_velo[0:2, :, 0] = 0
+    c_velo[-1:-3, :, 0] = 0
+    c_velo[:, 0:2, 1] = 0
+    c_velo[:, -1:-3, 1] = 0
 
     return c_velo
 
@@ -225,12 +226,11 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, p_C, p_F, c_velo,
         F_new = np.eye(2)
         F_new += dt * C
 
+        # Update particles
+        p_pos[i, :] = p
+        p_velo[i, :] = v
         p_F[i, :, :] = np.matmul(F_new, F)
         p_C[i, :, :] = C
-
-        # Update particles
-        p_pos[i] = p[:]
-        p_velo[i] = v[:]
 
     return p_pos, p_velo, p_C, p_F
 
