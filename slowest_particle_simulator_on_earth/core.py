@@ -45,14 +45,42 @@ def compute_interpolation_weights(p_pos):
     return p_weights
 
 
-def particle_to_grid(p_pos, p_F, p_mass, p_velo, cells, p_weights, p_vals,
-                     p_volu, dt=1.0):
+def particle_to_grid_volume(p_pos, p_mass, p_weights, cells):
+    """Compute a volume field using particles."""
+    dims = cells.shape[0], cells.shape[1]
+    nr_part = p_pos.shape[0]
+
+    p_volu = np.ones(nr_part)
+    c_mass = np.ones(dims)
+
+    for i in range(nr_part):
+        p = p_pos[i, :]  # particle coordinates
+        w = p_weights[i, :, :]  # particle neighbour interpolation weights
+        m = p_mass[i]  # particle masses
+        cell_idx = (np.floor(p)).astype(int)
+
+        density = 0.
+        for gx in range(3):
+            for gy in range(3):
+                weight = w[gx, 0] * w[gy, 1]
+
+                cell = np.array([cell_idx[0] + gx - 1, cell_idx[1] + gy - 1])
+                cell = cell.astype("int")
+                density += c_mass[cell[0], cell[1]] * weight
+
+        if density != 0:
+            p_volu[i] = m / density
+
+    return p_volu, c_mass
+
+
+def particle_to_grid(p_pos, p_C, p_F, p_mass, p_velo, cells, p_weights, p_vals,
+                     p_volu, c_mass, dt=1.0):
     """Compute a scalar field using particles."""
     # useful derivatives
     dims = cells.shape[0], cells.shape[1]
     nr_part = p_velo.shape[0]
 
-    c_mass = np.zeros(dims)  # scalar field
     c_velo = np.zeros(dims + (2,))  # vector field
     c_values = np.zeros(dims)
 
@@ -62,17 +90,17 @@ def particle_to_grid(p_pos, p_F, p_mass, p_velo, cells, p_weights, p_vals,
         # Deformation gradient??
         F = p_F[i, :, :]
         J = np.linalg.det(F)
-        p_volu[i] = p_volu[i] * J
+        volume = p_volu[i] * J
 
         # Useful matrices for Neo-Hookean model
-        F_T = F.T
+        F_T = np.copy(F.T)
         F_inv_T = np.linalg.inv(F_T)
         F_minus_F_inv_T = F - F_inv_T
 
         # MPM course equation 48
         elastic_lambda = 10.  # Parametrize this
         elastic_mu = 20.  # Parametrize this
-        P_term_0 = elastic_mu * (F_minus_F_inv_T)
+        P_term_0 = elastic_mu * F_minus_F_inv_T
         P_term_1 = elastic_lambda * np.log(J) * F_inv_T
         P = P_term_0 + P_term_1
 
@@ -86,14 +114,14 @@ def particle_to_grid(p_pos, p_F, p_mass, p_velo, cells, p_weights, p_vals,
         # I scale the rendering of the domain rather than the domain itself.
         # We multiply by dt as part of the process of fusing the momentum and
         # force update for MLS-MPM
-        eq_16_term_0 = -p_volu[i] * 4 * stress * dt
+        eq_16_term_0 = -volume * 4 * stress * dt
 
+        # 9 cell neighbourhood of the particle
         m = p_mass[i]  # particle masses
         v = p_velo[i, :]  # particle velocities
         w = p_weights[i, :, :]  # particle neighbour interpolation weights
         value = p_vals[i]  # particle values
-
-        # 9 cell neighbourhood of the particle
+        C = p_C[i, :, :]
         cell_idx = (np.floor(p)).astype(int)
         for gx in range(3):
             for gy in range(3):
@@ -102,11 +130,11 @@ def particle_to_grid(p_pos, p_F, p_mass, p_velo, cells, p_weights, p_vals,
                 cell = np.array([cell_idx[0] + gx - 1, cell_idx[1] + gy - 1])
                 cell = cell.astype("int")
                 cell_dist = (cell - p) + 0.5
-                Q = np.dot(F, cell_dist)  # TODO: C or F??
+                Q = np.matmul(C, cell_dist)
 
                 # MPM course equation 172
                 mass_contrib = weight * m
-                c_mass[cell[0], cell[1]] += mass_contrib
+                # c_mass[cell[0], cell[1]] += mass_contrib
 
                 # APIC P2G momentum contribution
                 c_velo[cell[0], cell[1], :] += mass_contrib * (v + Q)
@@ -123,19 +151,27 @@ def particle_to_grid(p_pos, p_F, p_mass, p_velo, cells, p_weights, p_vals,
                 # NOTE: Cell velocity is actually momentum here. It will be
                 # updated later.
 
-    return c_mass, c_velo, c_values
+    return c_velo, c_values
 
 
 def grid_velocity_update(c_velo, c_mass, dt=1., gravity=0.05):
     """Operate on velocity grid."""
     idx = c_mass > 0
+    # Convert momentum to velocity, apply gravity
     c_velo[idx, :] /= c_mass[idx, None]
     c_velo[idx, :] += dt * np.array([gravity, 0])
+
+    # "slip" boundary conditions
+    c_velo[0, :] = 0
+    c_velo[-1, :] = 0
+    c_velo[:, 0] = 0
+    c_velo[:, -1] = 0
+
     return c_velo
 
 
-def grid_to_particle_velocity(p_pos, p_velo, p_weights, p_C, c_velo, dt=1.,
-                              rule="bounce", bounce_factor=0.5):
+def grid_to_particle_velocity(p_pos, p_velo, p_weights, p_C, p_F, c_velo,
+                              dt=1., rule="clamp", bounce_factor=0.5):
     """Update particles based on velocities on the grid."""
     dims = c_velo.shape
     nr_part = p_pos.shape[0]
@@ -146,6 +182,8 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, p_C, c_velo, dt=1.,
         p = p_pos[i, :]
         v = p_velo[i, :]
         w = p_weights[i, :, :]
+        C = p_C[i, :, :]
+        F = p_F[i, :, :]
 
         # NOTE(nialltl): Constructing affine per-particle momentum matrix from
         # APIC / MLS-MPM. See APIC paper:
@@ -173,27 +211,34 @@ def grid_to_particle_velocity(p_pos, p_velo, p_weights, p_C, c_velo, dt=1.,
                 B += term
                 v += weighted_velocity
 
-        p_C[i] = B * 4  # unused for now
-
+        C = B * 4
         # Advect particles
         p += v * dt
 
         # Act on escaped particles
         p, v = clamp(
             p, v, d_min_x=0, d_max_x=dims[0], d_min_y=0, d_max_y=dims[1],
-            rule="bounce", bounce_factor=bounce_factor)
+            rule=rule, bounce_factor=bounce_factor)
+
+        # Deformation gradient update - MPM course, equation 181
+        # Fp' = (I + dt * p.C) * Fp
+        F_new = np.eye(2)
+        F_new += dt * C
+
+        p_F[i, :, :] = np.matmul(F_new, F)
+        p_C[i, :, :] = C
 
         # Update particles
         p_pos[i] = p[:]
         p_velo[i] = v[:]
 
-    return p_pos, p_velo, p_C
+    return p_pos, p_velo, p_C, p_F
 
 
 def clamp(p, v, d_min_x=0, d_max_x=100, d_min_y=0, d_max_y=100,
           rule="slip", bounce_factor=-0.5):
     """Prevent particles escaping grid."""
-    if rule == "slip":  # Clamp positions
+    if rule == "clamp":  # Clamp positions
         if p[0] < d_min_x + 1:
             p[0] = d_min_x + 1
         elif p[0] > d_max_x - 2:
@@ -202,6 +247,20 @@ def clamp(p, v, d_min_x=0, d_max_x=100, d_min_y=0, d_max_y=100,
             p[1] = d_min_y + 1
         elif p[1] > d_max_y - 2:
             p[1] = d_max_y - 2
+
+    elif rule == "slip":
+        if p[0] < d_min_x + 1:
+            p[0] = d_min_x + 1
+            v[0] = 0
+        elif p[0] > d_max_x - 2:
+            p[0] = d_max_x - 2
+            v[0] = 0
+        if p[1] < d_min_y + 1:
+            p[1] = d_min_y + 1
+            v[1] = 0
+        elif p[1] > d_max_y - 2:
+            p[1] = d_max_y - 2
+            v[1] = 0
 
     elif rule == "bounce":
         if p[0] < d_min_x + 1:

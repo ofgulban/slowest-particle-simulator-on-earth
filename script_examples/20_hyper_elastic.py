@@ -4,20 +4,20 @@ import nibabel as nb
 import numpy as np
 from slowest_particle_simulator_on_earth.core import (
     compute_interpolation_weights, particle_to_grid, grid_velocity_update,
-    grid_to_particle_velocity)
+    grid_to_particle_velocity, particle_to_grid_volume)
 from slowest_particle_simulator_on_earth.utils import (
     save_img, create_export_folder, embed_data_into_square_lattice,
     normalize_data_range)
 
 # =============================================================================
 # Parameters
-NII_FILE = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped_brain_2x.nii.gz"
+NII_FILE = "/home/faruk/Git/slowest-particle-simulator-on-earth/script_examples/sample_data/sample_T1w_cropped_brain_4x.nii.gz"
 OUT_DIR = create_export_folder(NII_FILE)
 
 SLICE_NR = 3
 NR_ITER = 200
 
-DT = 1  # Time step (smaller = more accurate simulation)
+DT = 1.  # Time step (smaller = more accurate simulation)
 GRAVITY = 0.05
 
 THR_MIN = 200
@@ -53,11 +53,12 @@ p_pos[:, 1] += 0.5
 NR_PART = p_pos.shape[0]
 
 p_velo = np.zeros((NR_PART, 2))
-p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -1
-p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 4
+# p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -0.5
+# p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 0.5
 
 p_mass = np.ones(NR_PART)
-p_C = np.eye(2)  # Momentum matrix?
+
+p_C = np.zeros([2, 2])  # Deformation gradient matrix
 p_C = np.repeat(p_C[np.newaxis, :, :], NR_PART, axis=0)
 p_F = np.eye(2)  # Deformation gradient matrix
 p_F = np.repeat(p_F[np.newaxis, :, :], NR_PART, axis=0)
@@ -66,6 +67,8 @@ p_volu = np.ones(NR_PART)
 
 # Initialize cells
 cells = np.zeros(data.shape)
+c_mass = np.ones(data.shape)
+c_mass[idx_mask_x, idx_mask_y] = 1
 
 # Some informative prints
 print("Output folder: {}".format(OUT_DIR))
@@ -76,18 +79,18 @@ print("Number of particles: {}".format(NR_PART))
 for t in range(NR_ITER):
     p_weights = compute_interpolation_weights(p_pos)
 
-    c_mass, c_velo, c_values = particle_to_grid(
-        p_pos, p_F, p_mass, p_velo, cells, p_weights, p_vals, p_volu, dt=DT)
+    p_volu, c_mass = particle_to_grid_volume(p_pos, p_mass, p_weights, c_mass)
+
+    c_velo, c_values = particle_to_grid(
+        p_pos, p_C, p_F, p_mass, p_velo, cells, p_weights, p_vals, p_volu,
+        c_mass, dt=DT)
 
     c_velo = grid_velocity_update(
         c_velo, c_mass, dt=DT, gravity=GRAVITY)
 
-    p_pos, p_velo, p_C = grid_to_particle_velocity(
-        p_pos, p_velo, p_weights, p_C, c_velo, dt=DT,
-        rule="bounce", bounce_factor=-0.9)
-
-    # Add static
-    c_values[idx_mask_x, idx_mask_y] += data[idx_mask_x, idx_mask_y]
+    p_pos, p_velo, p_C, p_F = grid_to_particle_velocity(
+        p_pos, p_velo, p_weights, p_C, p_F, c_velo, dt=DT,
+        rule="slip", bounce_factor=-0.9)
 
     # Adjust brightness w.r.t. mass
     c_values[c_mass > 2] /= c_mass[c_mass > 2]
