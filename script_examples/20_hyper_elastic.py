@@ -53,8 +53,8 @@ p_pos[:, 1] += 0.5
 NR_PART = p_pos.shape[0]
 
 p_velo = np.zeros((NR_PART, 2))
-# p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -0.5
-# p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 0.5
+p_velo[:, 0] = (np.random.rand(NR_PART) + 0) * -0.5
+p_velo[:, 1] = (np.random.rand(NR_PART) - 0.5) * 0.5
 
 p_mass = np.ones(NR_PART)
 
@@ -63,12 +63,8 @@ p_C = np.repeat(p_C[np.newaxis, :, :], NR_PART, axis=0)
 p_F = np.eye(2)  # Deformation gradient matrix
 p_F = np.repeat(p_F[np.newaxis, :, :], NR_PART, axis=0)
 
-p_volu = np.ones(NR_PART)
-
 # Initialize cells
 cells = np.zeros(data.shape)
-c_mass = np.ones(data.shape)
-c_mass[idx_mask_x, idx_mask_y] = 1
 
 # Some informative prints
 print("Output folder: {}".format(OUT_DIR))
@@ -79,11 +75,11 @@ print("Number of particles: {}".format(NR_PART))
 for t in range(NR_ITER):
     p_weights = compute_interpolation_weights(p_pos)
 
-    p_volu, c_mass = particle_to_grid_volume(p_pos, p_mass, p_weights, c_mass)
+    p_volu, c_mass = particle_to_grid_volume(p_pos, p_mass, p_weights, cells)
 
     c_velo, c_values = particle_to_grid(
         p_pos, p_C, p_F, p_mass, p_velo, cells, p_weights, p_vals, p_volu,
-        c_mass, dt=DT)
+        dt=DT)
 
     c_velo = grid_velocity_update(
         c_velo, c_mass, dt=DT, gravity=GRAVITY)

@@ -49,8 +49,8 @@ def particle_to_grid_volume(p_pos, p_mass, p_weights, cells):
     """Compute a volume field using particles."""
     dims = cells.shape[0], cells.shape[1]
     nr_part = p_pos.shape[0]
-
     p_volu = np.ones(nr_part)
+
     c_mass = np.ones(dims)
 
     for i in range(nr_part):
